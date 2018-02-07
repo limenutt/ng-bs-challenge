@@ -1,0 +1,10 @@
+.project-card {
+  margin: 10px;
+  width: 18rem;
+}
+a.page-link {
+  color: #007bff;
+  &.current {
+    color: black;
+  }
+}

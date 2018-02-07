@@ -1,0 +1,54 @@
+<div fxLayout="column" fxLayoutAlign="center center">
+  <button class="btn btn-success" (click)="addProject()">New Project</button>
+  <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap>
+    <div *ngFor="let project of projects" class="card project-card">
+      <div class="card-body" *ngIf="project.mode === 'editing'" fxLayout="column">
+        <div *ngIf="project.error" class="alert alert-danger alert-dismissible fade show" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <label for="inputName" class="sr-only">Name</label>
+        <input type="email" id="inputName" class="form-control" placeholder="Project title" required 
+        [(ngModel)]="project.name">
+        <label for="inputDescription" class="sr-only">Description</label>
+        <input type="email" id="inputDescription" class="form-control" placeholder="Project description" 
+        [(ngModel)]="project.description">
+        <label for="inputStatus" class="sr-only">Status</label>
+        <input type="email" id="inputStatus" class="form-control" placeholder="Project status" 
+        [(ngModel)]="project.status">
+        <div>
+          <input type="checkbox" id="exampleCheck1" [(ngModel)]="project.completed">
+          <label class="" for="exampleCheck1">Completed</label>
+        </div>
+        <div fxLayout="row" fxLayoutAlign="space-between">
+          <button class="btn btn-primary" (click)="saveProject(project)">Save</button>
+          <button class="btn" [ngClass]="{'btn-danger': !project.id}" (click)="cancel(project)">Cancel</button>
+        </div>
+      </div>
+      <div class="card-body" *ngIf="project.mode !== 'editing'">
+        <h5 class="card-title">&nbsp;{{project.name}}</h5>
+        <p class="card-text">&nbsp;{{project.description}}</p>
+        <p class="card-text">&nbsp;{{project.status ? 'Status: ' + project.status : ''}}</p>
+        <p class="card-text">&nbsp;<b>{{project.completed ? 'Completed' : ''}}</b></p>
+        <div fxLayout="row" fxLayoutAlign="space-between">
+          <button class="btn btn-primary" (click)="startEditing(project)">Edit</button>
+          <button class="btn btn-danger" (click)="deleteProject(project)">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav aria-label="Pages">
+    <ul class="pagination">
+      <li *ngIf="page > 1" class="page-item">
+        <a class="page-link" (click)="loadPage(page - 1)">Previous</a>
+      </li>
+      <li *ngFor="let pageNumber of pages" class="page-item" >
+        <a class="page-link" (click)="loadPage(pageNumber)" [ngClass]="{'current': pageNumber === page}">{{pageNumber}}</a>
+      </li>
+      <li *ngIf="page < totalPages" class="page-item">
+        <a class="page-link" (click)="loadPage(page + 1)">Next</a>
+      </li>
+    </ul>
+  </nav>
+</div>
