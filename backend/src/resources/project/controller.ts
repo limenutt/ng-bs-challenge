@@ -3,14 +3,23 @@ import { Op } from 'sequelize';
 
 import { ItemRequest, UserRequest } from '../../middleware/validate';
 import { w } from '../../util';
-import { ModelController, PageInformation } from '../common/modelController';
+import { IPageInformation, ModelController } from '../common/modelController';
 
 import { IProject } from './model';
 
+export interface IProjectListResponse extends IPageInformation {
+  projects: IProject[];
+}
+export interface IProjectResponse {
+  project: IProject;
+}
+export interface IOperationSuccessResponse {
+  success: true;
+}
 export class ProjectsController extends ModelController {
   public get list() {
     // Consider moving pagination logic to ModelController
-    return w<IProject, { projects: IProject[] } & PageInformation>(async (body, req: UserRequest) => {
+    return w<null, IProjectListResponse>(async (body, req: UserRequest) => {
       const startPage = 1;
       const defaultPageSize = 5;
       const maxPageSize = 20;
@@ -43,7 +52,7 @@ export class ProjectsController extends ModelController {
     res.send({ project: req.items.project });
   }
   public get update() {
-    return w<IProject, { project: IProject }>(async (body, req: ItemRequest) => {
+    return w<IProject, IProjectResponse>(async (body, req: ItemRequest) => {
       const projectToUpdate = body;
       projectToUpdate.id = req.items.project.id;
       await this.db.model<IProject, IProject>('project').upsert(body, {
@@ -54,7 +63,7 @@ export class ProjectsController extends ModelController {
     });
   }
   public get delete() {
-    return w<any, { success: true }>(async (body, req: ItemRequest) => {
+    return w<any, IOperationSuccessResponse>(async (body, req: ItemRequest) => {
       await this.db.model('project').destroy({ where: {
         id: { [Op.eq]: req.items.project.id }
       }});
@@ -62,7 +71,7 @@ export class ProjectsController extends ModelController {
     });
   }
   public get create() {
-    return w<IProject, { project: IProject }>(async (body, req: UserRequest, res: Response) => {
+    return w<IProject, IProjectResponse>(async (body, req: UserRequest, res: Response) => {
       const projectToCreate = body;
       projectToCreate.userId = req.currentUser.id;
       const project = await this.db.model<IProject, IProject>('project').create(body, {

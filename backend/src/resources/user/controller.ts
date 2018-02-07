@@ -13,34 +13,39 @@ import { Op } from 'sequelize';
 
 import { w } from '../../util';
 
-interface IRegistrationPayload {
+export interface IRegistrationPayload {
+  firstName?: string;
+  lastName?: string;
   email: string;
   password: string;
 }
-interface ITokenInfo {
+export interface ILoginPayload {
+  email: string;
+  password: string;
+}
+export interface ITokenInfo {
   accessToken: string;
   expiresAt: number;
   now: number;
 }
-interface IRegistrationResponse {
+export interface IRegistrationResponse {
   token: ITokenInfo;
 }
 export class UsersController extends ModelController {
   get signup() {
     return w<IRegistrationPayload, IRegistrationResponse>(async body => {
+      const userToCreate: IUser = <IUser>body;
+
       const passwordSalt = crypto.randomBytes(16).toString('base64');
-      const user = await this.db.model('user').create({
-        email: body.email,
-        passwordSalt,
-        password: this.hashPassword(body.password, passwordSalt)
-      });
+      userToCreate.password = this.hashPassword(userToCreate.password, passwordSalt);
+      const user = await this.db.model<IUser, IUser>('user').create(userToCreate);
       return {
-        token: this.generateToken(<IUser>user)
+        token: this.generateToken(user)
       };
     });
   }
   get signin() {
-    return w<IRegistrationPayload, IRegistrationResponse>(async body => {
+    return w<ILoginPayload, IRegistrationResponse>(async body => {
       const user = await this.db.model<IUser, IUser>('user').findOne({
         where: { email: { [Op.eq]: body.email } }
       });

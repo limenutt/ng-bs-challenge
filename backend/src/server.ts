@@ -27,14 +27,15 @@ export type SignalHandler = (...args: any[]) => void;
 export class Server {
 
   protected app: express.Express;
-  protected httpServer: HTTPServer;
+  public httpServer: HTTPServer;
   protected signalListeners: Map<string, SignalHandler>;
   protected db: Sequelize.Sequelize;
-  constructor(protected config: IConfig) {
+  protected closingPromise: Promise<void>;
+  constructor(protected config: IConfig, protected sequelizeClass: typeof Sequelize = Sequelize) {
     this.signalListeners = new Map<string, SignalHandler>();
   }
   protected async loadDb() {
-    this.db = new Sequelize(
+    this.db = new this.sequelizeClass(
       this.config.service.mysql.database,
       this.config.service.mysql.user, this.config.service.mysql.password, {
         host: this.config.service.mysql.host,
@@ -66,11 +67,15 @@ export class Server {
         this.app.use(cors({origin: this.config.server.origins}));
       }
       routes(this.app, this.db, this.config);
-
+      this.app.get('/ping', (req, res, next) => {
+        res.send({ pong: true });
+      });
       this.app.use(this.handleError.bind(this));
 
       this.httpServer = this.app.listen(this.config.server.port);
-      this.httpServer.once('close', this.cleanup);
+      this.httpServer.once('close', () => {
+        this.closingPromise = this.cleanup();
+      });
       this.attachSignalListeners();
       winston.info(`Server is listening on [${this.httpServer.address().port}]`);
     } catch (error) {
@@ -109,7 +114,7 @@ export class Server {
    * @return     {Promise}  { }
    */
   public async stop(): Promise<void> {
-    if (this.httpServer) {
+    if (this.httpServer && this.httpServer.listening) {
       await new Promise<void>((resolve, reject) => {
         this.httpServer.close((error: Error) => {
           if (error) {
@@ -119,6 +124,11 @@ export class Server {
           }
         });
       });
+      if (this.closingPromise) {
+        await this.closingPromise;
+      }
+    } else {
+      await this.cleanup();
     }
     this.detachSignalListeners();
   }

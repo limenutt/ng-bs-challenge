@@ -68,7 +68,7 @@ export class ConfigurationLoader {
       },
       server: {
         port: this.envNumber('SERVER_PORT', 3031),
-        origins: []
+        origins: ['http://localhost:4200']
       }
     };
   }
