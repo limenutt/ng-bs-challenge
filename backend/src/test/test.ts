@@ -14,7 +14,7 @@ function importTest(path: string, name?: string): void {
 }
 
 describe('API server', () => {
-  // importTest('./spec/server.spec');
+  importTest('./spec/server.spec');
   importTest('./spec/serverAPI.spec');
 });
 /* tslint:enable:no-require-imports no-var-requires non-literal-require no-console mocha-no-side-effect-code */
